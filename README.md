@@ -8,7 +8,7 @@ Single HTML file, zero dependencies, zero build step. Open it and play.
 
 ## 🎮 Play it
 
-Open `eco-campus-sorting-relay.html` in any modern browser — no server, no install, no npm.
+Open `eco-campus-sorting-relay.html` in any modern browser — no server, no install, no npm. 
 
 ```bash
 open eco-campus-sorting-relay.html      # macOS
