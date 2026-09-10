@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eco Campus Sorting Relay</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --sage:        #E9EFE2;
+    --sage-deep:   #D8E3CC;
+    --ink:         #22281F;
+    --brown:       #7A4E2D;
+    --brown-dark:  #5C3A21;
+    --brown-light: #C8996B;
+    --green:       #2E7D46;
+    --green-dark:  #1F5A32;
+    --green-light: #8FD19E;
+    --black-bin:   #26241F;
+    --black-light: #4A4740;
+    --sun:         #F5B942;
+    --sun-dark:    #D99A22;
+    --coral:       #E4623B;
+    --paper:       #FBF8F1;
+    --shadow:      rgba(34,40,31,0.18);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.55) 0px, rgba(255,255,255,0.55) 22px, rgba(200,200,190,0.35) 22px, rgba(200,200,190,0.35) 24px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.0) 0px, rgba(255,255,255,0.0) 58px, rgba(200,200,190,0.28) 58px, rgba(200,200,190,0.28) 60px),
+      var(--sage);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,h2,h3,.display{ font-family:'Baloo 2',sans-serif; margin:0; }
+
+  .stage{
+    max-width:920px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:18px 16px 0;
+    position:relative;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-badge{
+    width:42px;height:42px;border-radius:12px;
+    background:linear-gradient(145deg, var(--green), var(--green-dark));
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px; box-shadow:0 3px 0 var(--green-dark);
+    transform:rotate(-4deg);
+  }
+  .brand-text h1{ font-size:22px; font-weight:800; letter-spacing:0.2px; line-height:1; }
+  .brand-text p{ margin:2px 0 0; font-size:12.5px; color:#5c634f; font-weight:600; }
+
+  .hud{ display:flex; gap:10px; }
+  .hud-pill{
+    background:var(--paper); border-radius:14px; padding:7px 13px;
+    text-align:center; min-width:64px; box-shadow:0 2px 0 rgba(0,0,0,0.08);
+  }
+  .hud-pill .num{ font-family:'Baloo 2'; font-size:19px; font-weight:700; line-height:1; }
+  .hud-pill .lbl{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.6px; color:#7c826d; font-weight:700; }
+  .hud-pill.streak .num{ color:var(--coral); }
+  .hud-pill.score .num{ color:var(--green-dark); }
+
+  .timer-wrap{
+    height:10px; border-radius:8px; background:rgba(0,0,0,0.08);
+    overflow:hidden; margin-bottom:16px;
+  }
+  .timer-bar{
+    height:100%; width:100%; border-radius:8px;
+    background:linear-gradient(90deg, var(--green), var(--sun));
+    transition:width 0.12s linear, background 0.3s;
+  }
+  .timer-bar.low{ background:linear-gradient(90deg, var(--coral), #ff8a5c); }
+
+  /* ---------- SCREENS ---------- */
+  .screen{ display:none; flex:1; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  /* START SCREEN */
+  #screen-start{ justify-content:center; align-items:center; text-align:center; padding-bottom:40px; }
+  .hero-emoji{ font-size:56px; margin-bottom:6px; filter:drop-shadow(0 6px 0 rgba(0,0,0,0.08)); }
+  #screen-start h2{ font-size:30px; font-weight:800; margin-bottom:8px; }
+  #screen-start .sub{ max-width:440px; color:#565c4a; font-size:15px; line-height:1.5; margin-bottom:26px; }
+
+  .choice-group{ width:100%; max-width:520px; margin-bottom:22px; }
+  .choice-group h3{ font-size:13px; text-transform:uppercase; letter-spacing:0.8px; color:#78805f; margin-bottom:10px; font-weight:700; }
+  .choice-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .choice-card{
+    flex:1; min-width:140px; background:var(--paper); border:2.5px solid transparent;
+    border-radius:16px; padding:14px 12px; cursor:pointer; text-align:left;
+    box-shadow:0 3px 0 rgba(0,0,0,0.08); transition:transform .12s, border-color .12s;
+  }
+  .choice-card:hover{ transform:translateY(-2px); }
+  .choice-card.selected{ border-color:var(--green); background:#eef7ee; }
+  .choice-card .cc-icon{ font-size:22px; }
+  .choice-card .cc-title{ font-family:'Baloo 2'; font-weight:700; font-size:15px; margin:4px 0 2px; }
+  .choice-card .cc-desc{ font-size:12px; color:#6a715a; line-height:1.35; }
+
+  .btn{
+    font-family:'Baloo 2'; font-weight:700; font-size:17px; border:none;
+    border-radius:14px; padding:14px 34px; cursor:pointer; color:#fff;
+    background:linear-gradient(145deg, var(--green), var(--green-dark));
+    box-shadow:0 4px 0 var(--green-dark); transition:transform .1s, box-shadow .1s;
+  }
+  .btn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--green-dark); }
+  .btn.secondary{
+    background:var(--paper); color:var(--ink); box-shadow:0 4px 0 rgba(0,0,0,0.12);
+  }
+  .btn.secondary:active{ box-shadow:0 1px 0 rgba(0,0,0,0.12); }
+
+  /* GAME SCREEN */
+  #screen-game{ flex:1; }
+  .keyhint{ text-align:center; font-size:11.5px; color:#7c826d; margin-bottom:6px; font-weight:600; }
+
+  .item-arena{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; min-height:200px; margin-bottom:8px;
+  }
+  .item-card{
+    background:var(--paper); border-radius:22px; padding:26px 40px;
+    box-shadow:0 8px 0 rgba(0,0,0,0.1); text-align:center;
+    animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+    cursor:grab; user-select:none;
+  }
+  .item-card:active{ cursor:grabbing; }
+  .item-card.shake{ animation:shakeIt .4s; }
+  .item-card .item-emoji{ font-size:64px; line-height:1; display:block; }
+  .item-card .item-name{ font-family:'Baloo 2'; font-weight:700; font-size:19px; margin-top:8px; }
+
+  @keyframes popIn{ from{ transform:scale(.5) rotate(-8deg); opacity:0; } to{ transform:scale(1) rotate(0); opacity:1; } }
+  @keyframes shakeIt{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-10px); } 40%{ transform:translateX(9px); } 60%{ transform:translateX(-6px); } 80%{ transform:translateX(4px); } }
+
+  .queue-strip{ display:flex; gap:8px; margin-top:16px; opacity:.7; }
+  .queue-strip .q-item{ font-size:22px; background:rgba(255,255,255,0.6); border-radius:10px; padding:6px 8px; }
+
+  .floater{
+    position:absolute; font-family:'Baloo 2'; font-weight:800; font-size:26px;
+    pointer-events:none; animation:floatUp 0.9s ease-out forwards;
+    left:50%; top:30%;
+  }
+  @keyframes floatUp{ from{ transform:translate(-50%,0) scale(0.8); opacity:1; } to{ transform:translate(-50%,-70px) scale(1.15); opacity:0; } }
+
+  .toast{
+    position:fixed; left:50%; bottom:210px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 18px; border-radius:14px;
+    max-width:380px; font-size:13.5px; line-height:1.4; box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    opacity:0; transition:opacity .25s, transform .25s; z-index:50; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast b{ color:var(--sun); }
+
+  /* BINS */
+  .bins{ display:flex; gap:12px; padding:14px 0 20px; }
+  .bin{
+    flex:1; border-radius:18px 18px 10px 10px; padding:10px 10px 14px;
+    color:#fff; cursor:pointer; border:none; text-align:center;
+    position:relative; transform:translateY(0); transition:transform .12s, box-shadow .12s;
+    box-shadow:0 6px 0 rgba(0,0,0,0.25);
+  }
+  .bin:hover{ transform:translateY(-3px); }
+  .bin:active{ transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,0.25); }
+  .bin.hot{ outline:3px dashed rgba(255,255,255,0.85); outline-offset:3px; }
+  .bin.correct-flash{ animation:goodPulse .5s; }
+  .bin.wrong-flash{ animation:badPulse .5s; }
+  @keyframes goodPulse{ 0%{ box-shadow:0 6px 0 rgba(0,0,0,0.25);} 40%{ box-shadow:0 6px 0 rgba(0,0,0,0.25), 0 0 0 8px rgba(143,209,158,0.55);} 100%{ box-shadow:0 6px 0 rgba(0,0,0,0.25);} }
+  @keyframes badPulse{ 0%{ box-shadow:0 6px 0 rgba(0,0,0,0.25);} 40%{ box-shadow:0 6px 0 rgba(0,0,0,0.25), 0 0 0 8px rgba(228,98,59,0.55);} 100%{ box-shadow:0 6px 0 rgba(0,0,0,0.25);} }
+
+  .bin-compost{ background:linear-gradient(160deg, var(--brown-light) 0%, var(--brown) 55%, var(--brown-dark) 100%); }
+  .bin-recycle{ background:linear-gradient(160deg, var(--green-light) 0%, var(--green) 55%, var(--green-dark) 100%); }
+  .bin-trash{   background:linear-gradient(160deg, var(--black-light) 0%, var(--black-bin) 60%, #111 100%); }
+
+  .bin .bin-lid{
+    font-size:11px; font-weight:700; letter-spacing:.2px; opacity:.92;
+    border-bottom:2px dashed rgba(255,255,255,0.35); padding-bottom:6px; margin-bottom:8px;
+  }
+  .bin .bin-icon{ font-size:30px; display:block; margin-bottom:2px; }
+  .bin .bin-name{ font-family:'Baloo 2'; font-weight:700; font-size:15px; }
+  .bin .bin-key{
+    position:absolute; top:8px; right:10px; background:rgba(255,255,255,0.25);
+    border-radius:6px; font-size:11px; font-weight:800; padding:1px 6px;
+  }
+
+  /* END SCREEN */
+  #screen-end{ justify-content:center; align-items:center; text-align:center; }
+  .result-badge{ font-size:52px; margin-bottom:4px; }
+  #screen-end h2{ font-size:26px; margin-bottom:4px; }
+  #screen-end .rsub{ color:#5c634f; font-size:14px; margin-bottom:18px; }
+  .stat-grid{ display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; justify-content:center; }
+  .stat-card{ background:var(--paper); border-radius:14px; padding:12px 20px; min-width:96px; box-shadow:0 3px 0 rgba(0,0,0,0.08); }
+  .stat-card .snum{ font-family:'Baloo 2'; font-size:22px; font-weight:800; }
+  .stat-card .slbl{ font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:#7c826d; font-weight:700; margin-top:2px; }
+  .fact-recap{ max-width:480px; text-align:left; background:#eef2e6; border-left:4px solid var(--green); border-radius:10px; padding:12px 16px; margin-bottom:22px; font-size:13.5px; line-height:1.55; color:#3d4433; }
+  .fact-recap b{ display:block; margin-bottom:4px; color:var(--green-dark); font-family:'Baloo 2'; font-size:13px; }
+  .end-actions{ display:flex; gap:12px; }
+
+  footer{ text-align:center; font-size:11px; color:#8a9078; padding:14px 0 22px; }
+
+  @media (max-width:520px){
+    .item-card{ padding:20px 26px; }
+    .item-card .item-emoji{ font-size:52px; }
+    .bin .bin-icon{ font-size:24px; }
+    .brand-text h1{ font-size:18px; }
+    .hud-pill{ min-width:52px; padding:6px 9px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-badge">♻️</div>
+      <div class="brand-text">
+        <h1>ECO CAMPUS</h1>
+        <p>Sorting Relay</p>
+      </div>
+    </div>
+    <div class="hud" id="hud" style="visibility:hidden;">
+      <div class="hud-pill score"><div class="num" id="hud-score">0</div><div class="lbl">Score</div></div>
+      <div class="hud-pill streak"><div class="num" id="hud-streak">0</div><div class="lbl">Streak</div></div>
+      <div class="hud-pill"><div class="num" id="hud-count">0/0</div><div class="lbl">Sorted</div></div>
+    </div>
+  </div>
+
+  <div class="timer-wrap" id="timer-wrap" style="visibility:hidden;">
+    <div class="timer-bar" id="timer-bar"></div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="screen-start">
+    <div class="hero-emoji">🌱🗑️♻️</div>
+    <h2>Eco-Campus Sorting Relay</h2>
+    <p class="sub">Compost, Recyclables, or Non-Recyclables? Sort fast, sort right &mdash; and don't contaminate the bins. Pick your crew and your mode to begin.</p>
+
+    <div class="choice-group">
+      <h3>Choose your crew</h3>
+      <div class="choice-row" id="squad-row"></div>
+    </div>
+
+    <div class="choice-group">
+      <h3>Choose your mode</h3>
+      <div class="choice-row" id="mode-row"></div>
+    </div>
+
+    <button class="btn" id="btn-start">Start Sorting →</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <div class="keyhint">Tap a bin, drag the item, or press 1 / 2 / 3</div>
+    <div class="item-arena" id="item-arena">
+      <div class="item-card" id="item-card" draggable="true">
+        <span class="item-emoji" id="item-emoji">🍌</span>
+        <span class="item-name" id="item-name">Banana Peel</span>
+      </div>
+      <div class="queue-strip" id="queue-strip"></div>
+    </div>
+
+    <div class="bins">
+      <button class="bin bin-compost" data-bin="compost">
+        <span class="bin-key">1</span>
+        <div class="bin-lid">FLOWERS · FOOD WASTE · WOODEN CUTLERY</div>
+        <span class="bin-icon">🍂</span>
+        <span class="bin-name">Compost</span>
+      </button>
+      <button class="bin bin-recycle" data-bin="recycle">
+        <span class="bin-key">2</span>
+        <div class="bin-lid">GLASS · METAL · PAPER · PLASTIC</div>
+        <span class="bin-icon">♻️</span>
+        <span class="bin-name">Recyclables</span>
+      </button>
+      <button class="bin bin-trash" data-bin="trash">
+        <span class="bin-key">3</span>
+        <div class="bin-lid">STYROFOAM · CHIP BAGS · TISSUE</div>
+        <span class="bin-icon">🗑️</span>
+        <span class="bin-name">Non-Recyclables</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div class="screen" id="screen-end">
+    <div class="result-badge" id="result-badge">🏆</div>
+    <h2 id="result-title">Round Complete!</h2>
+    <p class="rsub" id="result-sub">Here's how your crew did.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="snum" id="end-score">0</div><div class="slbl">Score</div></div>
+      <div class="stat-card"><div class="snum" id="end-accuracy">0%</div><div class="slbl">Accuracy</div></div>
+      <div class="stat-card"><div class="snum" id="end-best-streak">0</div><div class="slbl">Best Streak</div></div>
+      <div class="stat-card"><div class="snum" id="end-contam">0</div><div class="slbl">Contaminations</div></div>
+    </div>
+    <div class="fact-recap">
+      <b>Eco Debrief</b>
+      <span id="fact-recap-text">Tissue paper's fibers are too weak and dirty to recycle. Wooden cutlery breaks down naturally, so it's Compost, not Recycling. Keep recyclables clean & dry &mdash; grease ruins whole batches.</span>
+    </div>
+    <div class="end-actions">
+      <button class="btn secondary" id="btn-change-squad">Change Crew</button>
+      <button class="btn" id="btn-again">Play Again</button>
+    </div>
+  </div>
+
+  <footer>Eco-Campus Sorting Relay &middot; Train your eye, protect the planet.</footer>
+</div>
+
+<script>
+(function(){
+
+  /* ---------------- DATA ---------------- */
+
+  const ITEMS = [
+    { name:"Banana Peel", emoji:"🍌", bin:"compost" },
+    { name:"Apple Core", emoji:"🍎", bin:"compost" },
+    { name:"Wilted Flowers", emoji:"🌸", bin:"compost" },
+    { name:"Wooden Chopsticks", emoji:"🥢", bin:"compost",
+      fact:"Wooden cutlery breaks down naturally, so it belongs in Compost — not Recycling." },
+    { name:"Coffee Grounds", emoji:"☕", bin:"compost" },
+    { name:"Eggshells", emoji:"🥚", bin:"compost" },
+
+    { name:"Clean Plastic Bottle", emoji:"🧴", bin:"recycle" },
+    { name:"Aluminum Soda Can", emoji:"🥫", bin:"recycle" },
+    { name:"Cereal Box", emoji:"📦", bin:"recycle" },
+    { name:"Glass Jar", emoji:"🫙", bin:"recycle" },
+    { name:"Paper Notebook", emoji:"📓", bin:"recycle" },
+    { name:"Old Magazine", emoji:"📖", bin:"recycle" },
+
+    { name:"Chip Bag", emoji:"🍟", bin:"trash" },
+    { name:"Greasy Pizza Box", emoji:"🍕", bin:"trash",
+      fact:"Grease contaminates paper fibers — recyclables must stay clean & dry." },
+    { name:"Styrofoam Takeout Box", emoji:"🥡", bin:"trash" },
+    { name:"Used Tissue Paper", emoji:"🧻", bin:"trash",
+      fact:"Used tissues have weak, soiled fibers, which is why they can't be recycled." },
+    { name:"Candy Wrapper", emoji:"🍬", bin:"trash" },
+    { name:"Broken Ceramic Mug", emoji:"🍵", bin:"trash" },
+  ];
+
+  const GENERIC_FACT = {
+    compost:"Organic waste like this breaks down into nutrient-rich soil.",
+    recycle:"Clean & dry keeps this out of the landfill and into something new.",
+    trash:"When something's contaminated or mixed-material, it's safer in Non-Recyclables."
+  };
+
+  const SQUADS = {
+    kids: {
+      label:"Kids Campus", icon:"🧒",
+      desc:"Extra time, big cheers.",
+      auditorTime:60, relayTime:6,
+      correct:["Awesome sorting, eco-hero!","Great eye!","You nailed it!","Boom — perfect toss!"],
+      wrong:["Oops, wrong bin! Let's learn why:","Not quite — here's the trick:","Careful — that one's tricky:"]
+    },
+    student: {
+      label:"Student Life", icon:"🎓",
+      desc:"Balanced pace & scoring.",
+      auditorTime:45, relayTime:4,
+      correct:["Correctly sorted.","Nice — right bin!","Sorted clean.","Good call."],
+      wrong:["Wrong bin.","Contamination!","Not this one — here's why:","Missed sort:"]
+    },
+    office: {
+      label:"Office Challenge", icon:"💼",
+      desc:"Fast pace, efficiency audit.",
+      auditorTime:30, relayTime:3,
+      correct:["Correctly diverted.","Compliant sort.","Audit: pass.","Logged correctly."],
+      wrong:["Contamination logged.","Audit flag raised.","Non-compliant sort:","Diversion error:"]
+    }
+  };
+
+  const MODES = {
+    auditor: {
+      label:"Trash Auditor", icon:"⏱️",
+      desc:"One timer. Sort as many as you can before it runs out. +1 correct, −2 contamination."
+    },
+    relay: {
+      label:"Relay Sprint", icon:"🏃",
+      desc:"Each item has its own countdown. Chain correct sorts to build a streak multiplier."
+    }
+  };
+
+  /* ---------------- STATE ---------------- */
+
+  let squadKey = "student";
+  let modeKey = "auditor";
+
+  let queue = [];
+  let qIndex = 0;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let correctCount = 0;
+  let wrongCount = 0;
+  let attempted = 0;
+
+  let globalTimer = null;
+  let globalTimeLeft = 0;
+  let globalTimeTotal = 0;
+
+  let itemTimer = null;
+  let itemTimeLeft = 0;
+  let itemTimeTotal = 0;
+
+  let factsShown = new Set();
+  let gameActive = false;
+
+  /* ---------------- DOM ---------------- */
+
+  const el = id => document.getElementById(id);
+  const screens = {
+    start: el('screen-start'), game: el('screen-game'), end: el('screen-end')
+  };
+  const hud = el('hud');
+  const timerWrap = el('timer-wrap');
+  const timerBar = el('timer-bar');
+  const itemCard = el('item-card');
+  const itemEmoji = el('item-emoji');
+  const itemName = el('item-name');
+  const itemArena = el('item-arena');
+  const queueStrip = el('queue-strip');
+
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+    hud.style.visibility = name==='game' ? 'visible' : 'hidden';
+    timerWrap.style.visibility = name==='game' ? 'visible' : 'hidden';
+  }
+
+  /* ---------------- START SCREEN BUILD ---------------- */
+
+  const squadRow = el('squad-row');
+  Object.entries(SQUADS).forEach(([key, s])=>{
+    const card = document.createElement('div');
+    card.className = 'choice-card' + (key===squadKey ? ' selected' : '');
+    card.dataset.key = key;
+    card.innerHTML = `<span class="cc-icon">${s.icon}</span><div class="cc-title">${s.label}</div><div class="cc-desc">${s.desc}</div>`;
+    card.addEventListener('click', ()=>{
+      squadKey = key;
+      [...squadRow.children].forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+    squadRow.appendChild(card);
+  });
+
+  const modeRow = el('mode-row');
+  Object.entries(MODES).forEach(([key, m])=>{
+    const card = document.createElement('div');
+    card.className = 'choice-card' + (key===modeKey ? ' selected' : '');
+    card.dataset.key = key;
+    card.innerHTML = `<span class="cc-icon">${m.icon}</span><div class="cc-title">${m.label}</div><div class="cc-desc">${m.desc}</div>`;
+    card.addEventListener('click', ()=>{
+      modeKey = key;
+      [...modeRow.children].forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+    modeRow.appendChild(card);
+  });
+
+  el('btn-start').addEventListener('click', startGame);
+  el('btn-again').addEventListener('click', startGame);
+  el('btn-change-squad').addEventListener('click', ()=> showScreen('start'));
+
+  /* ---------------- SHUFFLE / QUEUE ---------------- */
+
+  function shuffled(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  /* ---------------- GAME FLOW ---------------- */
+
+  function startGame(){
+    score=0; streak=0; bestStreak=0; correctCount=0; wrongCount=0; attempted=0;
+    factsShown = new Set();
+    qIndex = 0;
+    queue = shuffled(ITEMS);
+    gameActive = true;
+
+    updateHud();
+    showScreen('game');
+
+    if(modeKey === 'auditor'){
+      globalTimeTotal = SQUADS[squadKey].auditorTime;
+      globalTimeLeft = globalTimeTotal;
+      startGlobalTimer();
+      presentItem();
+    } else {
+      presentItem(); // relay uses per-item timer
+    }
+  }
+
+  function startGlobalTimer(){
+    clearInterval(globalTimer);
+    globalTimer = setInterval(()=>{
+      globalTimeLeft -= 0.1;
+      renderTimerBar(globalTimeLeft, globalTimeTotal);
+      if(globalTimeLeft <= 0){
+        clearInterval(globalTimer);
+        endGame();
+      }
+    }, 100);
+  }
+
+  function startItemTimer(){
+    clearInterval(itemTimer);
+    itemTimeTotal = SQUADS[squadKey].relayTime;
+    itemTimeLeft = itemTimeTotal;
+    renderTimerBar(itemTimeLeft, itemTimeTotal);
+    itemTimer = setInterval(()=>{
+      itemTimeLeft -= 0.1;
+      renderTimerBar(itemTimeLeft, itemTimeTotal);
+      if(itemTimeLeft <= 0){
+        clearInterval(itemTimer);
+        handleTimeout();
+      }
+    }, 100);
+  }
+
+  function renderTimerBar(left, total){
+    const pct = Math.max(0, (left/total)*100);
+    timerBar.style.width = pct + '%';
+    timerBar.classList.toggle('low', pct < 25);
+  }
+
+  function currentItem(){
+    return queue[qIndex % queue.length];
+  }
+
+  function presentItem(){
+    if(modeKey === 'relay' && qIndex >= queue.length){
+      endGame();
+      return;
+    }
+    const it = currentItem();
+    itemEmoji.textContent = it.emoji;
+    itemName.textContent = it.name;
+    itemCard.classList.remove('shake');
+    void itemCard.offsetWidth;
+    itemCard.style.animation = 'none';
+    void itemCard.offsetWidth;
+    itemCard.style.animation = '';
+
+    renderQueueStrip();
+
+    if(modeKey === 'relay'){
+      startItemTimer();
+    }
+  }
+
+  function renderQueueStrip(){
+    queueStrip.innerHTML = '';
+    for(let k=1; k<=4; k++){
+      const idx = qIndex + k;
+      if(idx >= queue.length && modeKey === 'relay') break;
+      const it = queue[idx % queue.length];
+      const span = document.createElement('span');
+      span.className = 'q-item';
+      span.textContent = it.emoji;
+      queueStrip.appendChild(span);
+    }
+  }
+
+  function updateHud(){
+    el('hud-score').textContent = score;
+    el('hud-streak').textContent = streak;
+    if(modeKey === 'auditor'){
+      el('hud-count').textContent = attempted;
+    } else {
+      el('hud-count').textContent = Math.min(qIndex, queue.length) + '/' + queue.length;
+    }
+  }
+
+  function floatText(text, positive){
+    const f = document.createElement('div');
+    f.className = 'floater';
+    f.textContent = text;
+    f.style.color = positive ? '#2E7D46' : '#E4623B';
+    f.style.left = (45 + Math.random()*10) + '%';
+    itemArena.appendChild(f);
+    setTimeout(()=> f.remove(), 900);
+  }
+
+  let toastTimer = null;
+  function showToast(html){
+    let t = document.querySelector('.toast');
+    if(!t){
+      t = document.createElement('div');
+      t.className = 'toast';
+      document.body.appendChild(t);
+    }
+    t.innerHTML = html;
+    requestAnimationFrame(()=> t.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function handleChoice(binKey){
+    if(!gameActive) return;
+    const it = currentItem();
+    attempted++;
+    const isCorrect = it.bin === binKey;
+    const binEl = document.querySelector('.bin[data-bin="'+binKey+'"]');
+
+    if(isCorrect){
+      correctCount++;
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      let pts;
+      if(modeKey==='auditor'){ pts = 1; }
+      else { pts = 10 + Math.min(streak-1, 8)*2; }
+      score += pts;
+      binEl.classList.add('correct-flash');
+      setTimeout(()=>binEl.classList.remove('correct-flash'), 500);
+      floatText('+'+pts, true);
+      showToast('<b>'+pick(SQUADS[squadKey].correct)+'</b> '+ (it.fact && !factsShown.has(it.name) ? it.fact : ''));
+      if(it.fact) factsShown.add(it.name);
+    } else {
+      wrongCount++;
+      streak = 0;
+      let pts;
+      if(modeKey==='auditor'){ pts = -2; }
+      else { pts = -5; }
+      score += pts;
+      binEl.classList.add('wrong-flash');
+      setTimeout(()=>binEl.classList.remove('wrong-flash'), 500);
+      itemCard.classList.add('shake');
+      floatText(pts, false);
+      const explain = it.fact || GENERIC_FACT[it.bin];
+      showToast('<b>'+pick(SQUADS[squadKey].wrong)+'</b> '+ it.name + ' belongs in ' + binLabel(it.bin) + '. ' + explain);
+      factsShown.add(it.name);
+    }
+
+    clearInterval(itemTimer);
+    updateHud();
+    advance();
+  }
+
+  function handleTimeout(){
+    if(!gameActive) return;
+    const it = currentItem();
+    attempted++; wrongCount++; streak = 0;
+    updateHud();
+    floatText('Missed!', false);
+    showToast('<b>Too slow!</b> '+it.name+' needed the '+binLabel(it.bin)+' bin.');
+    advance();
+  }
+
+  function binLabel(b){
+    return b==='compost' ? 'Compost' : b==='recycle' ? 'Recyclables' : 'Non-Recyclables';
+  }
+
+  function advance(){
+    qIndex++;
+    if(modeKey === 'auditor'){
+      if(globalTimeLeft > 0){
+        setTimeout(presentItem, 260);
+      }
+    } else {
+      if(qIndex >= queue.length){
+        setTimeout(endGame, 400);
+      } else {
+        setTimeout(presentItem, 260);
+      }
+    }
+  }
+
+  function endGame(){
+    gameActive = false;
+    clearInterval(globalTimer);
+    clearInterval(itemTimer);
+
+    const total = correctCount + wrongCount;
+    const acc = total ? Math.round((correctCount/total)*100) : 0;
+
+    el('end-score').textContent = score;
+    el('end-accuracy').textContent = acc + '%';
+    el('end-best-streak').textContent = bestStreak;
+    el('end-contam').textContent = wrongCount;
+
+    let badge = '🌱', title = 'Round Complete!';
+    if(acc >= 90){ badge='🏆'; title='Eco Champion!'; }
+    else if(acc >= 70){ badge='🌿'; title='Solid Sorting!'; }
+    else if(acc >= 50){ badge='🙂'; title='Getting There!'; }
+    else { badge='♻️'; title='Room to Regrow!'; }
+    el('result-badge').textContent = badge;
+    el('result-title').textContent = title;
+    el('result-sub').textContent = SQUADS[squadKey].label + ' · ' + MODES[modeKey].label;
+
+    showScreen('end');
+  }
+
+  /* ---------------- INPUT: bins ---------------- */
+
+  document.querySelectorAll('.bin').forEach(bin=>{
+    bin.addEventListener('click', ()=> handleChoice(bin.dataset.bin));
+    bin.addEventListener('dragover', e=>{ e.preventDefault(); bin.classList.add('hot'); });
+    bin.addEventListener('dragleave', ()=> bin.classList.remove('hot'));
+    bin.addEventListener('drop', e=>{
+      e.preventDefault();
+      bin.classList.remove('hot');
+      handleChoice(bin.dataset.bin);
+    });
+  });
+
+  itemCard.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', 'item');
+  });
+
+  document.addEventListener('keydown', e=>{
+    if(!gameActive) return;
+    if(e.key === '1') handleChoice('compost');
+    if(e.key === '2') handleChoice('recycle');
+    if(e.key === '3') handleChoice('trash');
+  });
+
+})();
+</script>
+</body>
+</html>
